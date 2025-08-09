@@ -5,7 +5,7 @@ using Il2Cpp;
 using MelonLoader;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppPantheonPersist;
-using MoreSocial.Models;
+using Models;
 using UnityEngine;
 
 public class ModMain : MelonMod
@@ -43,13 +43,13 @@ public class ModMain : MelonMod
                     foreach (var friend in onlineFriends)
                     {
                         string loggedInMessage = $"{friend} has logged in.";
-                        UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.Whisper);
+                        UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.ReplyWhisper);
                     }
 
                     foreach (var friend in offlineFriends)
                     {
                         string loggedInMessage = $"{friend} has logged off.";
-                        UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.Whisper);
+                        UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.ReplyWhisper);
                     }
                 }
                 

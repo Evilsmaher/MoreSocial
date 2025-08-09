@@ -3,7 +3,6 @@ namespace MoreSocial.Hooks;
 using HarmonyLib;
 using Il2Cpp;
 using Il2CppPantheonPersist;
-using UnityEngine;
 
 [HarmonyPatch(typeof(UIChatWindows))]
 public class ChatMessageHooks
