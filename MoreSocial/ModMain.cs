@@ -43,13 +43,13 @@ public class ModMain : MelonMod
                     foreach (var friend in onlineFriends)
                     {
                         string loggedInMessage = $"{friend} has logged in.";
-                        UIChatWindows.Instance.PassMessage("", loggedInMessage, ChatChannelType.LevelUp);
+                        UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.Whisper);
                     }
 
                     foreach (var friend in offlineFriends)
                     {
                         string loggedInMessage = $"{friend} has logged off.";
-                        UIChatWindows.Instance.PassMessage("", loggedInMessage, ChatChannelType.LevelUp);
+                        UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.Whisper);
                     }
                 }
                 
@@ -152,13 +152,13 @@ public class ModMain : MelonMod
             foreach (var loggedInChar in loggedInList)
             {
                 string loggedInMessage = $"{loggedInChar} has logged in.";
-                UIChatWindows.Instance.PassMessage("", loggedInMessage, ChatChannelType.LevelUp);
+                UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.Guild);
             }
 
             foreach (var loggedOffChar in loggedOffList)
             {
                 string loggedInMessage = $"{loggedOffChar} has logged off.";
-                UIChatWindows.Instance.PassMessage("", loggedInMessage, ChatChannelType.LevelUp);
+                UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.Guild);
             }
         }
     }
