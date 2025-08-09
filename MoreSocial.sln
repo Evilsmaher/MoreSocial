@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModTemplate", "ModTemplate\ModTemplate.csproj", "{FD54D537-D937-4796-AC96-42DE813AADAA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoreSocial", "MoreSocial\MoreSocial.csproj", "{FD54D537-D937-4796-AC96-42DE813AADAA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F1539EAC-C67D-4643-B6DB-9C875D274ADE}"
 	ProjectSection(SolutionItems) = preProject

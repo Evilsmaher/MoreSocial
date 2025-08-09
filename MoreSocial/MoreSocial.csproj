@@ -4,6 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>MoreSocial</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -548,7 +549,7 @@
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <ItemGroup>
-            <FilesToCopy Include="$(TargetDir)ModTemplate.dll" />
+            <FilesToCopy Include="$(TargetDir)MoreSocial.dll" />
         </ItemGroup>
         <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(GamePath)/Mods" />
     </Target>
