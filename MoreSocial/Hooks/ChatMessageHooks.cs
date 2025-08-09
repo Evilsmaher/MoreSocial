@@ -43,30 +43,3 @@ public class ChatMessageHooks
         return true;
     }
 }
-
-/*
- * Hook the UIChatWindow to retrieve the chat tab.
- * We feed `login` and `logout` to this chat tab.
- */
-[HarmonyPatch(typeof(UIChatWindow))]
-public class ChatWindowHooks
-{
-    [HarmonyPostfix]
-    [HarmonyPatch(nameof(UIChatWindow.Awake))]
-    private static void Prefix(UIChatWindow __instance)
-    {
-        if (__instance.name == "Panel_Chat")
-        {
-            Transform chats = __instance.transform.Find("Chats");
-            if (chats != null && chats.childCount > 0)
-            {
-                Transform firstChatName = chats.GetChild(0);
-                UIChat firstChat = firstChatName.GetComponent<UIChat>();
-                if (firstChat != null)
-                {
-                    Global.FirstChatTab = firstChat;
-                }
-            }
-        }
-    }
-}

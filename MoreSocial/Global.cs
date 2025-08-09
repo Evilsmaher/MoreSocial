@@ -14,5 +14,4 @@ public static class Global
     public static bool ShowGuildRosterChat = true;
     
     public static UISocialWindow? SocialWindow;
-    public static UIChat? FirstChatTab;
 }

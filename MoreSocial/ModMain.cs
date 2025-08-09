@@ -43,19 +43,13 @@ public class ModMain : MelonMod
                     foreach (var friend in onlineFriends)
                     {
                         string loggedInMessage = $"{friend} has logged in.";
-                        if (Global.FirstChatTab != null)
-                            Global.FirstChatTab.AddMessage("", loggedInMessage, ChatChannelType.LevelUp);
-                        else 
-                            MelonLogger.Msg($"Chat is null -- on");
+                        UIChatWindows.Instance.PassMessage("", loggedInMessage, ChatChannelType.LevelUp);
                     }
 
                     foreach (var friend in offlineFriends)
                     {
                         string loggedInMessage = $"{friend} has logged off.";
-                        if (Global.FirstChatTab != null)
-                            Global.FirstChatTab.AddMessage("", loggedInMessage, ChatChannelType.LevelUp);
-                        else 
-                            MelonLogger.Msg($"Chat is null - off");
+                        UIChatWindows.Instance.PassMessage("", loggedInMessage, ChatChannelType.LevelUp);
                     }
                 }
                 
@@ -158,19 +152,13 @@ public class ModMain : MelonMod
             foreach (var loggedInChar in loggedInList)
             {
                 string loggedInMessage = $"{loggedInChar} has logged in.";
-                if (Global.FirstChatTab != null)
-                    Global.FirstChatTab.AddMessage("", loggedInMessage, ChatChannelType.LevelUp);
-                else 
-                    MelonLogger.Msg($"Chat is null -- on");
+                UIChatWindows.Instance.PassMessage("", loggedInMessage, ChatChannelType.LevelUp);
             }
 
             foreach (var loggedOffChar in loggedOffList)
             {
                 string loggedInMessage = $"{loggedOffChar} has logged off.";
-                if (Global.FirstChatTab != null)
-                    Global.FirstChatTab.AddMessage("", loggedInMessage, ChatChannelType.LevelUp);
-                else 
-                    MelonLogger.Msg($"Chat is null - off");
+                UIChatWindows.Instance.PassMessage("", loggedInMessage, ChatChannelType.LevelUp);
             }
         }
     }
