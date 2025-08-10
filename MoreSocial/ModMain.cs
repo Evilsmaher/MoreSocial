@@ -26,7 +26,7 @@ public class ModMain : MelonMod
     }
     
     /*
-     * This func runs on a 10 sec timer to check friends and guildies 
+     * This func runs on a 6 (seemed smoother than 10) sec timer to check friends and guildies 
      * It will show logins and logoffs to the user's first chat window (which cannot be changed by VR so we should always have access to it)
      */
     private System.Collections.IEnumerator PeriodicCheckFriendsAndGuildStatus()
@@ -35,37 +35,47 @@ public class ModMain : MelonMod
         {
             if (Global.LoggedIn)
             {
+                List<string> friendOnline = new();
+                List<string> friendOffline = new();
+                List<string> guildieOnline = new();
+                List<string> guildieOffline = new();
+                
+                
                 Il2CppReferenceArray<WhoListEntry>? friends = FindFriends();
-                var friendStatus = _player.CheckFriendStatus(friends); 
+                var friendStatus = _player.CheckFriendStatus(friends);
                 if (friendStatus.HasValue)
                 {
                     var (onlineFriends, offlineFriends) = friendStatus.Value;
-                    foreach (var friend in onlineFriends)
-                    {
-                        string loggedInMessage = $"{friend} has logged in.";
-                        foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
-                        {
-
-                            UIChat chat = chatAndTab.Chat;
-                            chat.AddMessage("", loggedInMessage, ChatChannelType.ReplyWhisper, CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
-                        }
-                    }
-
-                    foreach (var friend in offlineFriends)
-                    {
-                        string loggedInMessage = $"{friend} has logged off.";
-                        foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
-                        {
-
-                            UIChat chat = chatAndTab.Chat;
-                            chat.AddMessage("", loggedInMessage, ChatChannelType.ReplyWhisper, CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
-                        }
-                    }
+                    friendOnline.AddRange(onlineFriends);
+                    friendOffline.AddRange(offlineFriends);
                 }
                 
-                FindGuildies();
+                yield return MelonCoroutines.Start(FindGuildies(guildieOnline, guildieOffline));
+
+                foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
+                {
+                    UIChat chat = chatAndTab.Chat;
+                    
+                    foreach (string guildieLogin in guildieOnline)
+                        chat.AddMessage("", $"{guildieLogin} has logged in. 1", ChatChannelType.Guild, 
+                        CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
+                    
+                    foreach (string guildieLogout in guildieOffline)
+                        chat.AddMessage("", $"{guildieLogout} has logged out. 2", ChatChannelType.Guild, 
+                            CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
+                    
+                    friendOnline = friendOnline.Except(guildieOnline).ToList();
+                    foreach (string friendLogin in friendOnline)
+                        chat.AddMessage("", $"{friendLogin} has logged in. 3", ChatChannelType.ReplyWhisper, 
+                            CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
+                    
+                    friendOffline = friendOffline.Except(guildieOffline).ToList();
+                    foreach (string friendLogout in friendOffline)
+                        chat.AddMessage("", $"{friendLogout} has logged out. 4", ChatChannelType.ReplyWhisper, 
+                            CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
+                }
             }
-            yield return new WaitForSeconds(10f);
+            yield return new WaitForSeconds(6f);
         }
     }
     
@@ -111,7 +121,7 @@ public class ModMain : MelonMod
      * I use 2 Coroutines to asynchronously determine when the roster vs. list are done. (Moderately async -- I use a hard-coded timer; described in SocialFinder.cs)
      * When they are both complete, I can compare them (TODO in README.md) and determine if someone left guild vs. actually logged off
      */
-    private void FindGuildies()
+    private IEnumerator FindGuildies(List<string> guildieOnline, List<string> guildieOffline)
     {
         if (Global.SocialWindow != null)
         {
@@ -120,73 +130,52 @@ public class ModMain : MelonMod
             Global.ShowGuildRosterChat = false;
             Global.ShowGuildiesListChat = false;
 
-            MelonCoroutines.Start(StatusCheckOnlineAndOfflineGuildies());
-        }
-    }
-    
-    private IEnumerator StatusCheckOnlineAndOfflineGuildies()
-    {
-        bool guildRosterDone = false;
-        bool guildListDone = false;
+            bool guildRosterDone = false;
+            bool guildListDone = false;
 
-        if (Global.SocialWindow != null)
-        {
-            MelonCoroutines.Start(SocialFinder.FindGuildiesCoroutine(Global.SocialWindow, () =>
+            if (Global.SocialWindow != null)
             {
-                Global.ShowGuildRosterChat = true;
-                guildRosterDone = true;
-            }));
-
-            MelonCoroutines.Start(SocialFinder.FindGuildListCoroutine(Global.SocialWindow, () =>
-            {
-                Global.ShowGuildiesListChat = true;
-                guildListDone = true;
-            }));
-        }
-
-        yield return new WaitUntil((Il2CppSystem.Func<bool>)(() => guildRosterDone && guildListDone));
-
-        List<string> curRoster = _player.NewRoster;
-        List<string> curGuildies = _player.NewGuildies;
-
-        if (_player.TwoCyclesAgoPreviousGuildies.Count < 1 && curGuildies.Count > 1)
-            _player.TwoCyclesAgoPreviousGuildies = new List<string>(curGuildies);
-        
-        else if (_player.OneCycleAgoPreviousGuildies.Count < 1 && curGuildies.Count > 1)
-            _player.OneCycleAgoPreviousGuildies = new List<string>(curGuildies);
-        
-        else
-        {
-            var loggedInList = curGuildies.Except(_player.OneCycleAgoPreviousGuildies).ToList();
-            /*
-             * For each zone, the `Player@(Owner)` object is destroyed and then remade in the new zone
-             * The assumption is that someone will zone within 10 secs. If they did not zone, they will have logged off
-             */
-            var loggedOffList = _player.TwoCyclesAgoPreviousGuildies.Except(_player.OneCycleAgoPreviousGuildies).Except(curGuildies).ToList();
-
-            _player.TwoCyclesAgoPreviousGuildies = new List<string>(_player.OneCycleAgoPreviousGuildies);
-            _player.OneCycleAgoPreviousGuildies = new List<string>(curGuildies);
-
-            foreach (var loggedInChar in loggedInList)
-            {
-                string loggedInMessage = $"{loggedInChar} has logged in.";
-                foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
+                MelonCoroutines.Start(SocialFinder.FindGuildiesCoroutine(Global.SocialWindow, () =>
                 {
+                    Global.ShowGuildRosterChat = true;
+                    guildRosterDone = true;
+                }));
 
-                    UIChat chat = chatAndTab.Chat;
-                    chat.AddMessage("", loggedInMessage, ChatChannelType.Guild, CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
-                }
+                MelonCoroutines.Start(SocialFinder.FindGuildListCoroutine(Global.SocialWindow, () =>
+                {
+                    Global.ShowGuildiesListChat = true;
+                    guildListDone = true;
+                }));
             }
 
-            foreach (var loggedOffChar in loggedOffList)
-            {
-                string loggedInMessage = $"{loggedOffChar} has logged off.";
-                foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
-                {
+            yield return new WaitUntil((Il2CppSystem.Func<bool>)(() => guildRosterDone && guildListDone));
 
-                    UIChat chat = chatAndTab.Chat;
-                    chat.AddMessage("", loggedInMessage, ChatChannelType.Guild, CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
-                }
+            List<string> curRoster = _player.NewRoster;
+            List<string> curGuildies = _player.NewGuildies;
+
+            if (_player.TwoCyclesAgoPreviousGuildies.Count < 1 && curGuildies.Count > 1)
+                _player.TwoCyclesAgoPreviousGuildies = new List<string>(curGuildies);
+            
+            else if (_player.OneCycleAgoPreviousGuildies.Count < 1 && curGuildies.Count > 1)
+                _player.OneCycleAgoPreviousGuildies = new List<string>(curGuildies);
+            
+            else
+            {
+                var loggedInList = curGuildies.Except(_player.OneCycleAgoPreviousGuildies).ToList();
+                /*
+                 * For each zone, the `Player@(Owner)` object is destroyed and then remade in the new zone
+                 * The assumption is that someone will zone within X secs (in this case, 6). If they did not zone, they will have logged off
+                 */
+                var loggedOffList = _player.TwoCyclesAgoPreviousGuildies
+                    .Except(_player.OneCycleAgoPreviousGuildies)
+                    .Except(curGuildies)
+                    .ToList();
+
+                _player.TwoCyclesAgoPreviousGuildies = new List<string>(_player.OneCycleAgoPreviousGuildies);
+                _player.OneCycleAgoPreviousGuildies = new List<string>(curGuildies);
+
+                guildieOnline.AddRange(loggedInList);
+                guildieOffline.AddRange(loggedOffList);
             }
         }
     }
