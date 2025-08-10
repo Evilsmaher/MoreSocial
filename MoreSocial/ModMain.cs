@@ -41,12 +41,14 @@ public class ModMain : MelonMod
                 
                 
                 Il2CppReferenceArray<WhoListEntry>? friends = FindFriends();
-                var friendStatus = _player.CheckFriendStatus(friends);
-                if (friendStatus.HasValue)
-                {
-                    var (onlineFriends, offlineFriends) = friendStatus.Value;
-                    friendOnline.AddRange(onlineFriends);
-                    friendOffline.AddRange(offlineFriends);
+                if (friends != null) {
+                    var friendStatus = _player.CheckFriendStatus(friends);
+                    if (friendStatus.HasValue)
+                    {
+                        var (onlineFriends, offlineFriends) = friendStatus.Value;
+                        friendOnline.AddRange(onlineFriends);
+                        friendOffline.AddRange(offlineFriends);
+                    }
                 }
                 
                 CheckIfInGuild();
@@ -55,27 +57,42 @@ public class ModMain : MelonMod
                 if (Global.IsInGuild)
                     yield return MelonCoroutines.Start(FindGuildies(guildieOnline, guildieOffline));
 
-                foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
+                if (UIChatWindows.Instance != null && UIChatWindows.Instance.mainWindow != null &&
+                    UIChatWindows.Instance.mainWindow.chats != null)
                 {
-                    UIChat chat = chatAndTab.Chat;
-                    
-                    foreach (string guildieLogin in guildieOnline)
-                        chat.AddMessage("", $"{guildieLogin} has logged in. 1", ChatChannelType.Guild, 
-                        CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
-                    
-                    foreach (string guildieLogout in guildieOffline)
-                        chat.AddMessage("", $"{guildieLogout} has logged out. 2", ChatChannelType.Guild, 
-                            CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
-                    
-                    friendOnline = friendOnline.Except(guildieOnline).ToList();
-                    foreach (string friendLogin in friendOnline)
-                        chat.AddMessage("", $"{friendLogin} has logged in. 3", ChatChannelType.ReplyWhisper, 
-                            CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
-                    
-                    friendOffline = friendOffline.Except(guildieOffline).ToList();
-                    foreach (string friendLogout in friendOffline)
-                        chat.AddMessage("", $"{friendLogout} has logged out. 4", ChatChannelType.ReplyWhisper, 
-                            CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
+                    foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
+                    {
+                        UIChat chat = chatAndTab.Chat;
+
+                        if (chat != null)
+                        {
+                            foreach (string guildieLogin in guildieOnline)
+                                chat.AddMessage("", $"{guildieLogin} has logged in.", ChatChannelType.Guild,
+                                    CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All,
+                                    false,
+                                    false);
+
+                            foreach (string guildieLogout in guildieOffline)
+                                chat.AddMessage("", $"{guildieLogout} has logged out.", ChatChannelType.Guild,
+                                    CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All,
+                                    false,
+                                    false);
+
+                            friendOnline = friendOnline.Except(guildieOnline).ToList();
+                            foreach (string friendLogin in friendOnline)
+                                chat.AddMessage("", $"{friendLogin} has logged in.", ChatChannelType.ReplyWhisper,
+                                    CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All,
+                                    false,
+                                    false);
+
+                            friendOffline = friendOffline.Except(guildieOffline).ToList();
+                            foreach (string friendLogout in friendOffline)
+                                chat.AddMessage("", $"{friendLogout} has logged out.", ChatChannelType.ReplyWhisper,
+                                    CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All,
+                                    false,
+                                    false);
+                        }
+                    }
                 }
             }
             yield return new WaitForSeconds(6f);
