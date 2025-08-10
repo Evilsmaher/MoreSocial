@@ -17,7 +17,6 @@ public class ModMain : MelonMod
     public ModMain()
     {
         Instance = this;
-        MelonLogger.Msg("[MoreSocial] ModMain instance created");
     }
     
     public override void OnInitializeMelon()
@@ -50,7 +49,11 @@ public class ModMain : MelonMod
                     friendOffline.AddRange(offlineFriends);
                 }
                 
-                yield return MelonCoroutines.Start(FindGuildies(guildieOnline, guildieOffline));
+                CheckIfInGuild();
+                yield return new WaitForSeconds(1f);
+                
+                if (Global.IsInGuild)
+                    yield return MelonCoroutines.Start(FindGuildies(guildieOnline, guildieOffline));
 
                 foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
                 {
@@ -93,6 +96,23 @@ public class ModMain : MelonMod
     public void HandleGuildListMessage(string name, string message, ChatChannelType channel)
     {
         _player.ProcessGuildListMessage(name, message, channel);
+    }
+
+    /*
+     * Some methods execute Guild functions; if the character is not in a guild, it will continually spam "You're not in a guild!". Instead, we check to see if the member is in the guild first using a quick `/who all guild`
+     */
+    public void CheckIfInGuild()
+    {
+        Global.RequestIsInGuild = true;
+        Global.ShowNotInGuildChat = false;
+
+        if (Global.SocialWindow != null)
+        {
+            MelonCoroutines.Start(SocialFinder.FindGuildListCoroutine(Global.SocialWindow, () =>
+            {
+                Global.ShowNotInGuildChat = false;
+            }));
+        }
     }
 
     /*

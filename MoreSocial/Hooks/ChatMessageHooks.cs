@@ -3,6 +3,7 @@ namespace MoreSocial.Hooks;
 using HarmonyLib;
 using Il2Cpp;
 using Il2CppPantheonPersist;
+using MelonLoader;
 
 [HarmonyPatch(typeof(UIChatWindows))]
 public class ChatMessageHooks
@@ -16,7 +17,7 @@ public class ChatMessageHooks
      */
     private static bool Prefix(UIChatWindows __instance, string name, ref string message, ChatChannelType channel)
     {
-        if (Global.ShowGuildRosterChat && Global.ShowGuildiesListChat)
+        if (Global.ShowGuildRosterChat && Global.ShowGuildiesListChat && Global.ShowNotInGuildChat)
             return true;
 
         if (!Global.ShowGuildRosterChat)
@@ -36,6 +37,24 @@ public class ChatMessageHooks
             if (channel == ChatChannelType.WhoListResults)
             {
                 ModMain.Instance?.HandleGuildListMessage(name, message, channel);
+                return false;
+            }
+        }
+        
+        if (!Global.ShowNotInGuildChat)
+        {
+            if (message.Contains("Online guild members:"))
+            {
+                Global.IsInGuild = true;
+                return false;
+            }
+            else if (message.Contains("You're not in a guild!"))
+            {
+                Global.IsInGuild = false;
+                return false;
+            }
+            else if (channel == ChatChannelType.WhoListResults)
+            {
                 return false;
             }
         }

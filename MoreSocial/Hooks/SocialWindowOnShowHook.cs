@@ -26,6 +26,12 @@ public class UIPanelHooks
                 Global.RequestGuildiesList = false;
                 return false;
             }
+
+            if (Global.RequestIsInGuild)
+            {
+                Global.RequestIsInGuild = false;
+                return false;
+            }
         }
         return true;
     }
