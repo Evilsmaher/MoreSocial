@@ -16,7 +16,8 @@ public class PlayerSocial
     
     private List<string> _newGuildies = new List<string>();
     public List<string> NewGuildies => _newGuildies;
-    public List<string> PreviousGuildies = new List<string>();
+    public List<string> TwoCyclesAgoPreviousGuildies = new List<string>();
+    public List<string> OneCycleAgoPreviousGuildies = new List<string>();
     
     private List<string> _newRoster = new List<string>();
     public List<string> NewRoster => _newRoster;

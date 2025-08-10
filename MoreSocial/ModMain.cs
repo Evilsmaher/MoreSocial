@@ -26,7 +26,7 @@ public class ModMain : MelonMod
     }
     
     /*
-     * This func runs on a 30 sec timer to check friends and guildies
+     * This func runs on a 10 sec timer to check friends and guildies 
      * It will show logins and logoffs to the user's first chat window (which cannot be changed by VR so we should always have access to it)
      */
     private System.Collections.IEnumerator PeriodicCheckFriendsAndGuildStatus()
@@ -43,19 +43,29 @@ public class ModMain : MelonMod
                     foreach (var friend in onlineFriends)
                     {
                         string loggedInMessage = $"{friend} has logged in.";
-                        UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.ReplyWhisper);
+                        foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
+                        {
+
+                            UIChat chat = chatAndTab.Chat;
+                            chat.AddMessage("", loggedInMessage, ChatChannelType.ReplyWhisper, CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
+                        }
                     }
 
                     foreach (var friend in offlineFriends)
                     {
                         string loggedInMessage = $"{friend} has logged off.";
-                        UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.ReplyWhisper);
+                        foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
+                        {
+
+                            UIChat chat = chatAndTab.Chat;
+                            chat.AddMessage("", loggedInMessage, ChatChannelType.ReplyWhisper, CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
+                        }
                     }
                 }
                 
                 FindGuildies();
             }
-            yield return new WaitForSeconds(30f);
+            yield return new WaitForSeconds(10f);
         }
     }
     
@@ -139,26 +149,44 @@ public class ModMain : MelonMod
         List<string> curRoster = _player.NewRoster;
         List<string> curGuildies = _player.NewGuildies;
 
-        if (_player.PreviousGuildies.Count < 1 && curGuildies.Count > 1)
-            _player.PreviousGuildies = new List<string>(curGuildies);
+        if (_player.TwoCyclesAgoPreviousGuildies.Count < 1 && curGuildies.Count > 1)
+            _player.TwoCyclesAgoPreviousGuildies = new List<string>(curGuildies);
+        
+        else if (_player.OneCycleAgoPreviousGuildies.Count < 1 && curGuildies.Count > 1)
+            _player.OneCycleAgoPreviousGuildies = new List<string>(curGuildies);
         
         else
         {
-            var loggedInList = curGuildies.Except(_player.PreviousGuildies).ToList();
-            var loggedOffList = _player.PreviousGuildies.Except(curGuildies).ToList();
+            var loggedInList = curGuildies.Except(_player.OneCycleAgoPreviousGuildies).ToList();
+            /*
+             * For each zone, the `Player@(Owner)` object is destroyed and then remade in the new zone
+             * The assumption is that someone will zone within 10 secs. If they did not zone, they will have logged off
+             */
+            var loggedOffList = _player.TwoCyclesAgoPreviousGuildies.Except(_player.OneCycleAgoPreviousGuildies).Except(curGuildies).ToList();
 
-            _player.PreviousGuildies = new List<string>(curGuildies);
+            _player.TwoCyclesAgoPreviousGuildies = new List<string>(_player.OneCycleAgoPreviousGuildies);
+            _player.OneCycleAgoPreviousGuildies = new List<string>(curGuildies);
 
             foreach (var loggedInChar in loggedInList)
             {
                 string loggedInMessage = $"{loggedInChar} has logged in.";
-                UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.Guild);
+                foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
+                {
+
+                    UIChat chat = chatAndTab.Chat;
+                    chat.AddMessage("", loggedInMessage, ChatChannelType.Guild, CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
+                }
             }
 
             foreach (var loggedOffChar in loggedOffList)
             {
                 string loggedInMessage = $"{loggedOffChar} has logged off.";
-                UIChatWindows.Instance.PassMessage(loggedInMessage, ChatChannelType.Guild);
+                foreach (UIChatWindow.ChatAndTab chatAndTab in UIChatWindows.Instance.mainWindow.chats)
+                {
+
+                    UIChat chat = chatAndTab.Chat;
+                    chat.AddMessage("", loggedInMessage, ChatChannelType.Guild, CombatLogDirectionalFilter.All, CombatLogFilter.Both, CombatLogPlayerFilter.All, false, false);
+                }
             }
         }
     }
