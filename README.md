@@ -12,7 +12,11 @@ MoreSocial
 
 ## Issues
 
-No major issues. Small inconveniences:
+Major:
+
+- Zoning still doesn't work. Somoene ported and it still shows login messages. 
+
+Small inconveniences:
 
 - Double pings for same person (friend and guildies)
-- Someone joins the guild = login message; Someone leaving = logout message; (I think, not tested)
+  - Someone joins the guild = login message; Someone leaving = logout message; (I think, not tested)
