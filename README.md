@@ -15,6 +15,10 @@ MoreSocial
 Major:
 
 - Zoning still doesn't work. Somoene ported and it still shows login messages. 
+- If you do a `/who`, you're going to see a lot of logins and logouts. It processes that who list as the guildies, resets the guild, then removes the who. So:
+  - /who logs in
+  - {All} guild logs out
+  - /who logs out
 
 Small inconveniences:
 
